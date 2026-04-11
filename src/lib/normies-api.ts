@@ -65,3 +65,56 @@ export function imageOriginalPngUrl(id: number): string {
 export function imageCurrentPngUrl(id: number): string {
   return `${getApiBase()}/normie/${id}/image.png`;
 }
+
+/** Burn commitment (list or detail). Fields mirror api.normies.art history endpoints. */
+export type BurnCommitmentSummary = {
+  commitId: string;
+  owner: string;
+  receiverTokenId: string;
+  tokenCount: number;
+  transferredActionPoints: string;
+  blockNumber: string;
+  timestamp: string;
+  txHash: string;
+  revealed: boolean;
+  totalActions: string;
+  expired: boolean;
+};
+
+export type BurnedTokenRef = {
+  tokenId: string;
+  pixelCount: number;
+};
+
+export type BurnCommitmentDetail = BurnCommitmentSummary & {
+  burnedTokens?: BurnedTokenRef[];
+};
+
+export async function fetchBurnsForReceiver(
+  receiverTokenId: number,
+  opts?: { limit?: number; offset?: number; signal?: AbortSignal },
+): Promise<BurnCommitmentSummary[]> {
+  const limit = opts?.limit ?? 50;
+  const offset = opts?.offset ?? 0;
+  const base = getApiBase();
+  const res = await fetch(
+    `${base}/history/burns/receiver/${receiverTokenId}?limit=${limit}&offset=${offset}`,
+    {
+      signal: opts?.signal,
+      headers: { Accept: "application/json" },
+    },
+  );
+  return parseJson<BurnCommitmentSummary[]>(res);
+}
+
+export async function fetchBurnCommitDetail(
+  commitId: string,
+  signal?: AbortSignal,
+): Promise<BurnCommitmentDetail> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/history/burns/${commitId}`, {
+    signal,
+    headers: { Accept: "application/json" },
+  });
+  return parseJson<BurnCommitmentDetail>(res);
+}

@@ -3,23 +3,44 @@ import {
   useEffect,
   useId,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
 } from "react";
 import {
+  fetchBurnCommitDetail,
+  fetchBurnsForReceiver,
   fetchCanvasDiff,
   fetchCanvasInfo,
   imageCurrentPngUrl,
   imageOriginalPngUrl,
+  type BurnCommitmentDetail,
 } from "./lib/normies-api";
 import "./App.css";
 
 const ID_MIN = 0;
 const ID_MAX = 9999;
 
+const NORMIES_CONTRACT =
+  "0x9Eb6E2025B64f340691e424b7fe7022fFDE12438" as const;
+
+function openseaItemUrl(tokenId: string) {
+  return `https://opensea.io/item/ethereum/${NORMIES_CONTRACT}/${tokenId}`;
+}
+
+function etherscanTxUrl(txHash: string) {
+  return `https://etherscan.io/tx/${txHash}`;
+}
+
+function formatTs(seconds: string) {
+  const n = Number.parseInt(seconds, 10);
+  if (!Number.isFinite(n)) return seconds;
+  return new Date(n * 1000).toLocaleString();
+}
+
 /** Edit these to your public name / site / social. */
-const FOOTER_CREDIT_LABEL = "jbjbjb3113";
-const FOOTER_CREDIT_HREF = "https://github.com/jbjbjb3113";
+const FOOTER_CREDIT_LABEL = "@Trailertrsh";
+const FOOTER_CREDIT_HREF = "https://x.com/trailertrsh";
 
 function parseId(raw: string): number | null {
   const n = Number.parseInt(raw.trim(), 10);
@@ -40,12 +61,46 @@ export default function App() {
     ReturnType<typeof fetchCanvasInfo>
   > | null>(null);
   const [cacheBust, setCacheBust] = useState(0);
+  const [burnCommits, setBurnCommits] = useState<BurnCommitmentDetail[]>([]);
+  const [burnsLoading, setBurnsLoading] = useState(false);
+  const [burnsErr, setBurnsErr] = useState<string | null>(null);
+  const loadAbortRef = useRef<AbortController | null>(null);
+
+  const loadBurnDetails = useCallback(
+    async (receiverId: number, signal: AbortSignal) => {
+      setBurnsLoading(true);
+      setBurnsErr(null);
+      setBurnCommits([]);
+      try {
+        const list = await fetchBurnsForReceiver(receiverId, {
+          limit: 30,
+          offset: 0,
+          signal,
+        });
+        const slice = list.slice(0, 12);
+        const details = await Promise.all(
+          slice.map((c) => fetchBurnCommitDetail(c.commitId, signal)),
+        );
+        setBurnCommits(details);
+      } catch (e) {
+        if (e instanceof DOMException && e.name === "AbortError") return;
+        if (e instanceof Error && e.name === "AbortError") return;
+        setBurnsErr(e instanceof Error ? e.message : String(e));
+        setBurnCommits([]);
+      } finally {
+        setBurnsLoading(false);
+      }
+    },
+    [],
+  );
 
   const load = useCallback(
     async (id: number) => {
+      loadAbortRef.current?.abort();
+      const ac = new AbortController();
+      loadAbortRef.current = ac;
       setLoading(true);
       setErr(null);
-      const ac = new AbortController();
       try {
         const [d, i] = await Promise.all([
           fetchCanvasDiff(id, ac.signal),
@@ -55,15 +110,18 @@ export default function App() {
         setInfo(i);
         setActiveId(id);
         setCacheBust((k) => k + 1);
+        void loadBurnDetails(id, ac.signal);
       } catch (e) {
         setDiff(null);
         setInfo(null);
+        setBurnCommits([]);
+        setBurnsErr(null);
         setErr(e instanceof Error ? e.message : String(e));
       } finally {
         setLoading(false);
       }
     },
-    [],
+    [loadBurnDetails],
   );
 
   const onSubmit = (e: FormEvent) => {
@@ -209,6 +267,90 @@ export default function App() {
               Download current PNG
             </a>
           </div>
+
+          <section className="burns" aria-label="Burn history for this Normie">
+            <h2 className="burns__title">Burns credited to this Normie</h2>
+            <p className="burns__lede">
+              Commit-reveal burns that listed Normie #{activeId} as the{" "}
+              <strong>receiver</strong> of action points (from{" "}
+              <a
+                href="https://api.normies.art/"
+                target="_blank"
+                rel="noreferrer"
+              >
+                api.normies.art
+              </a>{" "}
+              history).
+            </p>
+            {burnsLoading && (
+              <p className="burns__muted">Loading burn data…</p>
+            )}
+            {burnsErr && (
+              <div className="banner banner--err" role="alert">
+                Burns: {burnsErr}
+              </div>
+            )}
+            {!burnsLoading && !burnsErr && burnCommits.length === 0 && (
+              <p className="burns__muted">
+                No burn commitments found where this token was the receiver —
+                or history isn’t available (indexer).
+              </p>
+            )}
+            {!burnsLoading &&
+              !burnsErr &&
+              burnCommits.map((c) => (
+                <article key={c.commitId} className="burn-card">
+                  <div className="burn-card__head">
+                    <span className="burn-card__id">Commit #{c.commitId}</span>
+                    <a
+                      className="burn-card__tx"
+                      href={etherscanTxUrl(c.txHash)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View tx
+                    </a>
+                  </div>
+                  <dl className="burn-card__meta">
+                    <div>
+                      <dt>When</dt>
+                      <dd>{formatTs(c.timestamp)}</dd>
+                    </div>
+                    <div>
+                      <dt>Normies burned (count)</dt>
+                      <dd>{c.tokenCount}</dd>
+                    </div>
+                    <div>
+                      <dt>AP to receiver</dt>
+                      <dd>{c.transferredActionPoints}</dd>
+                    </div>
+                    <div>
+                      <dt>Total actions (commit)</dt>
+                      <dd>{c.totalActions}</dd>
+                    </div>
+                  </dl>
+                  {c.burnedTokens && c.burnedTokens.length > 0 && (
+                    <ul className="burn-card__tokens">
+                      {c.burnedTokens.map((t) => (
+                        <li key={`${c.commitId}-${t.tokenId}`}>
+                          <a
+                            href={openseaItemUrl(t.tokenId)}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            #{t.tokenId}
+                          </a>
+                          <span className="burn-card__px">
+                            {" "}
+                            ({t.pixelCount} px)
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </article>
+              ))}
+          </section>
         </>
       )}
 
