@@ -1,10 +1,13 @@
-const DEFAULT_BASE = "https://api.normies.art";
-
+/**
+ * Dev: Vite proxy at /normies-api → api.normies.art
+ * Prod (default): same-origin /api → Cloudflare Pages `functions/_middleware.ts` proxy
+ * Override: VITE_NORMIES_API_BASE=https://api.normies.art (only if you handle CORS)
+ */
 export function getApiBase(): string {
   const fromEnv = import.meta.env.VITE_NORMIES_API_BASE;
   if (fromEnv && fromEnv.length > 0) return fromEnv.replace(/\/$/, "");
   if (import.meta.env.DEV) return "/normies-api";
-  return DEFAULT_BASE;
+  return "/api";
 }
 
 export type CanvasDiff = {
