@@ -118,3 +118,31 @@ export async function fetchBurnCommitDetail(
   });
   return parseJson<BurnCommitmentDetail>(res);
 }
+
+/** One `setTransformBitmap` / canvas edit (indexer). API returns newest first. */
+export type NormieTransformVersion = {
+  version: number;
+  changeCount: number;
+  newPixelCount: number;
+  transformer: string;
+  blockNumber: string;
+  timestamp: string;
+  txHash: string;
+};
+
+export async function fetchNormieTransformVersions(
+  tokenId: number,
+  opts?: { limit?: number; offset?: number; signal?: AbortSignal },
+): Promise<NormieTransformVersion[]> {
+  const limit = opts?.limit ?? 80;
+  const offset = opts?.offset ?? 0;
+  const base = getApiBase();
+  const res = await fetch(
+    `${base}/history/normie/${tokenId}/versions?limit=${limit}&offset=${offset}`,
+    {
+      signal: opts?.signal,
+      headers: { Accept: "application/json" },
+    },
+  );
+  return parseJson<NormieTransformVersion[]>(res);
+}

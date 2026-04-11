@@ -12,9 +12,11 @@ import {
   fetchBurnsForReceiver,
   fetchCanvasDiff,
   fetchCanvasInfo,
+  fetchNormieTransformVersions,
   imageCurrentPngUrl,
   imageOriginalPngUrl,
   type BurnCommitmentDetail,
+  type NormieTransformVersion,
 } from "./lib/normies-api";
 import "./App.css";
 
@@ -36,6 +38,11 @@ function formatTs(seconds: string) {
   const n = Number.parseInt(seconds, 10);
   if (!Number.isFinite(n)) return seconds;
   return new Date(n * 1000).toLocaleString();
+}
+
+function shortAddr(addr: string) {
+  if (!addr || addr.length < 12) return addr;
+  return `${addr.slice(0, 6)}…${addr.slice(-4)}`;
 }
 
 /** Edit these to your public name / site / social. */
@@ -62,37 +69,61 @@ export default function App() {
   > | null>(null);
   const [cacheBust, setCacheBust] = useState(0);
   const [burnCommits, setBurnCommits] = useState<BurnCommitmentDetail[]>([]);
-  const [burnsLoading, setBurnsLoading] = useState(false);
+  const [transformVersions, setTransformVersions] = useState<
+    NormieTransformVersion[]
+  >([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
   const [burnsErr, setBurnsErr] = useState<string | null>(null);
+  const [versionsErr, setVersionsErr] = useState<string | null>(null);
   const loadAbortRef = useRef<AbortController | null>(null);
 
-  const loadBurnDetails = useCallback(
-    async (receiverId: number, signal: AbortSignal) => {
-      setBurnsLoading(true);
-      setBurnsErr(null);
-      setBurnCommits([]);
+  /** Burns (AP in) + transform versions (edits toward current canvas). */
+  const loadHistory = useCallback(async (tokenId: number, signal: AbortSignal) => {
+    setHistoryLoading(true);
+    setBurnsErr(null);
+    setVersionsErr(null);
+    setBurnCommits([]);
+    setTransformVersions([]);
+
+    const isAbort = (e: unknown) =>
+      (e instanceof DOMException && e.name === "AbortError") ||
+      (e instanceof Error && e.name === "AbortError");
+
+    try {
+      const burnList = await fetchBurnsForReceiver(tokenId, {
+        limit: 80,
+        offset: 0,
+        signal,
+      });
+      const detailSlice = burnList.slice(0, 24);
+      const details = await Promise.all(
+        detailSlice.map((c) => fetchBurnCommitDetail(c.commitId, signal)),
+      );
+      setBurnCommits(details);
+    } catch (e) {
+      if (!isAbort(e)) {
+        setBurnsErr(e instanceof Error ? e.message : String(e));
+      }
+    }
+
+    if (!signal.aborted) {
       try {
-        const list = await fetchBurnsForReceiver(receiverId, {
-          limit: 30,
+        const versionsRaw = await fetchNormieTransformVersions(tokenId, {
+          limit: 120,
           offset: 0,
           signal,
         });
-        const slice = list.slice(0, 12);
-        const details = await Promise.all(
-          slice.map((c) => fetchBurnCommitDetail(c.commitId, signal)),
-        );
-        setBurnCommits(details);
+        // Newest first from API → reverse for chronological (oldest edit first).
+        setTransformVersions([...versionsRaw].reverse());
       } catch (e) {
-        if (e instanceof DOMException && e.name === "AbortError") return;
-        if (e instanceof Error && e.name === "AbortError") return;
-        setBurnsErr(e instanceof Error ? e.message : String(e));
-        setBurnCommits([]);
-      } finally {
-        setBurnsLoading(false);
+        if (!isAbort(e)) {
+          setVersionsErr(e instanceof Error ? e.message : String(e));
+        }
       }
-    },
-    [],
-  );
+    }
+
+    setHistoryLoading(false);
+  }, []);
 
   const load = useCallback(
     async (id: number) => {
@@ -110,18 +141,20 @@ export default function App() {
         setInfo(i);
         setActiveId(id);
         setCacheBust((k) => k + 1);
-        void loadBurnDetails(id, ac.signal);
+        void loadHistory(id, ac.signal);
       } catch (e) {
         setDiff(null);
         setInfo(null);
         setBurnCommits([]);
+        setTransformVersions([]);
         setBurnsErr(null);
+        setVersionsErr(null);
         setErr(e instanceof Error ? e.message : String(e));
       } finally {
         setLoading(false);
       }
     },
-    [loadBurnDetails],
+    [loadHistory],
   );
 
   const onSubmit = (e: FormEvent) => {
@@ -268,11 +301,13 @@ export default function App() {
             </a>
           </div>
 
-          <section className="burns" aria-label="Burn history for this Normie">
-            <h2 className="burns__title">Burns credited to this Normie</h2>
+          <section className="burns" aria-label="On-chain history for this Normie">
+            <h2 className="burns__title">Provenance toward this Normie</h2>
             <p className="burns__lede">
-              Commit-reveal burns that listed Normie #{activeId} as the{" "}
-              <strong>receiver</strong> of action points (from{" "}
+              <strong>Burns</strong> = other Normies destroyed in a commit where
+              #{activeId} was the <strong>receiver</strong> of action points
+              (fuel). <strong>Canvas edits</strong> = each on-chain transform
+              that spent AP to reach today&apos;s look. Data from{" "}
               <a
                 href="https://api.normies.art/"
                 target="_blank"
@@ -280,23 +315,33 @@ export default function App() {
               >
                 api.normies.art
               </a>{" "}
-              history).
+              (indexer).
             </p>
-            {burnsLoading && (
-              <p className="burns__muted">Loading burn data…</p>
+            {historyLoading && (
+              <p className="burns__muted">Loading on-chain history…</p>
             )}
             {burnsErr && (
               <div className="banner banner--err" role="alert">
                 Burns: {burnsErr}
               </div>
             )}
-            {!burnsLoading && !burnsErr && burnCommits.length === 0 && (
+            {versionsErr && (
+              <div className="banner banner--err" role="alert">
+                Canvas edits: {versionsErr}
+              </div>
+            )}
+
+            <h3 className="burns__subtitle">Burns → AP credited here</h3>
+            <p className="burns__hint">
+              Up to 24 commits shown (detail); list API returns up to 80.
+            </p>
+            {!historyLoading && !burnsErr && burnCommits.length === 0 && (
               <p className="burns__muted">
-                No burn commitments found where this token was the receiver —
-                or history isn’t available (indexer).
+                No burn commits where this token was the receiver — or indexer
+                empty.
               </p>
             )}
-            {!burnsLoading &&
+            {!historyLoading &&
               !burnsErr &&
               burnCommits.map((c) => (
                 <article key={c.commitId} className="burn-card">
@@ -348,6 +393,55 @@ export default function App() {
                       ))}
                     </ul>
                   )}
+                </article>
+              ))}
+
+            <h3 className="burns__subtitle">Canvas edits (transforms)</h3>
+            <p className="burns__hint">
+              Each row is a <code>setTransformBitmap</code> step (oldest →
+              newest). Links to Etherscan.
+            </p>
+            {!historyLoading && !versionsErr && transformVersions.length === 0 && (
+              <p className="burns__muted">
+                No transform history — never edited on canvas, or indexer
+                unavailable.
+              </p>
+            )}
+            {!historyLoading &&
+              !versionsErr &&
+              transformVersions.map((v) => (
+                <article
+                  key={`${v.txHash}-${v.version}`}
+                  className="burn-card burn-card--compact"
+                >
+                  <div className="burn-card__head">
+                    <span className="burn-card__id">
+                      Edit v{v.version} · Δ{v.changeCount} px · total{" "}
+                      {v.newPixelCount} px
+                    </span>
+                    <a
+                      className="burn-card__tx"
+                      href={etherscanTxUrl(v.txHash)}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      View tx
+                    </a>
+                  </div>
+                  <dl className="burn-card__meta">
+                    <div>
+                      <dt>When</dt>
+                      <dd>{formatTs(v.timestamp)}</dd>
+                    </div>
+                    <div>
+                      <dt>By</dt>
+                      <dd title={v.transformer}>{shortAddr(v.transformer)}</dd>
+                    </div>
+                    <div>
+                      <dt>Block</dt>
+                      <dd>{v.blockNumber}</dd>
+                    </div>
+                  </dl>
                 </article>
               ))}
           </section>
