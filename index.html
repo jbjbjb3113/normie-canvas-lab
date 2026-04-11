@@ -8,7 +8,17 @@
   </head>
   <body>
     <noscript>Enable JavaScript to use Normie Canvas Lab.</noscript>
-    <div id="root"></div>
+    <!-- If JS works, React replaces everything inside #root. If you forever see the message below, the host is serving unbuilt HTML (script still points at /src/) or /assets/*.js is 404 — set Cloudflare "Build output" to dist and run npm run build. -->
+    <div id="root">
+      <p style="margin: 0; padding: 1.25rem; font-family: system-ui, sans-serif; color: #444; max-width: 40rem">
+        Loading Normie Canvas Lab…
+        <span style="display: block; font-size: 0.85rem; margin-top: 0.5rem; color: #888"
+          >If this never disappears, open DevTools → Network and check that
+          <code>/assets/*.js</code> returns 200 (deploy must publish the
+          <code>dist</code> folder after <code>npm run build</code>).</span
+        >
+      </p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
