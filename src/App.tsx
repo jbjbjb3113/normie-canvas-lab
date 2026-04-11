@@ -17,6 +17,10 @@ import "./App.css";
 const ID_MIN = 0;
 const ID_MAX = 9999;
 
+/** Edit these to your public name / site / social. */
+const FOOTER_CREDIT_LABEL = "jbjbjb3113";
+const FOOTER_CREDIT_HREF = "https://github.com/jbjbjb3113";
+
 function parseId(raw: string): number | null {
   const n = Number.parseInt(raw.trim(), 10);
   if (!Number.isFinite(n) || n < ID_MIN || n > ID_MAX) return null;
@@ -210,8 +214,15 @@ export default function App() {
 
       <footer className="footer">
         <p>
-          Fan tool — not affiliated with NORMIES. Replace this line with your
-          name / project link before shipping.
+          Unofficial fan tool — not affiliated with NORMIES, its creators, or
+          any marketplace.
+        </p>
+        <p>
+          Built by{" "}
+          <a href={FOOTER_CREDIT_HREF} target="_blank" rel="noreferrer">
+            {FOOTER_CREDIT_LABEL}
+          </a>
+          .
         </p>
       </footer>
     </div>
