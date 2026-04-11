@@ -146,3 +146,11 @@ export async function fetchNormieTransformVersions(
   );
   return parseJson<NormieTransformVersion[]>(res);
 }
+
+/** Composited PNG at a transform version (0 = first edit). */
+export function normieVersionImagePngUrl(
+  tokenId: number,
+  versionIndex: number,
+): string {
+  return `${getApiBase()}/history/normie/${tokenId}/version/${versionIndex}/image.png`;
+}
