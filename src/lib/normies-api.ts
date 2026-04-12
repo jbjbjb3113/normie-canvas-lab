@@ -66,6 +66,44 @@ export function imageCurrentPngUrl(id: number): string {
   return `${getApiBase()}/normie/${id}/image.png`;
 }
 
+/** Composited SVG (1000×1000, 40×40 viewBox per API). */
+export function imageCompositedSvgUrl(id: number): string {
+  return `${getApiBase()}/normie/${id}/image.svg`;
+}
+
+/** Pre-transform SVG. */
+export function imageOriginalSvgUrl(id: number): string {
+  return `${getApiBase()}/normie/${id}/original/image.svg`;
+}
+
+/** 1600-char `0`/`1` bitmap (row-major 40×40), composited or original. */
+export async function fetchNormiePixelsPlain(
+  id: number,
+  original: boolean,
+  signal?: AbortSignal,
+): Promise<string> {
+  const base = getApiBase();
+  const path = original
+    ? `/normie/${id}/original/pixels`
+    : `/normie/${id}/pixels`;
+  const res = await fetch(`${base}${path}`, {
+    signal,
+    headers: { Accept: "text/plain,*/*" },
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(text || `${res.status} ${res.statusText}`);
+  }
+  const raw = (await res.text()).replace(/\s/g, "");
+  const bits = [...raw].filter((c) => c === "0" || c === "1").join("");
+  if (bits.length !== 1600) {
+    throw new Error(
+      `Expected 1600 binary pixel chars (0/1), got ${bits.length} after filtering (raw length ${raw.length}).`,
+    );
+  }
+  return bits;
+}
+
 /** Burn commitment (list or detail). Fields mirror api.normies.art history endpoints. */
 export type BurnCommitmentSummary = {
   commitId: string;

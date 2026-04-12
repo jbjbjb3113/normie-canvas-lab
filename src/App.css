@@ -76,6 +76,11 @@
   background: transparent;
 }
 
+.btn--small {
+  padding: 0.28rem 0.55rem;
+  font-size: 0.8rem;
+}
+
 .banner {
   padding: 0.75rem 1rem;
   border-radius: 8px;
@@ -340,6 +345,28 @@
   color: var(--muted);
 }
 
+.lab-fetch-status {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  font-size: 0.88rem;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 52ch;
+}
+
+.lab-fetch-status code {
+  font-size: 0.85em;
+}
+
+/* Neutral “heads up” — not an error (avoid danger red that reads like a fault). */
+.lab-fetch-status--warn {
+  border-color: var(--border);
+  color: var(--muted);
+  background: color-mix(in srgb, var(--accent) 5%, var(--surface));
+}
+
 .gif-toolbar {
   align-items: flex-end;
 }
@@ -418,4 +445,426 @@
   max-width: min(100%, 720px);
   height: auto;
   image-rendering: crisp-edges;
+}
+
+.normie-3d-toolbar {
+  align-items: flex-end;
+}
+
+.normie-3d-toolbar__bake-colors {
+  flex-basis: 100%;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.normie-3d-view {
+  width: 100%;
+  height: 480px;
+  min-height: 400px;
+  max-height: min(70vh, 640px);
+  margin-bottom: 0.75rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: #0a0b0e;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.normie-3d-view--inline {
+  height: min(42vh, 380px);
+  min-height: 220px;
+  max-height: 420px;
+}
+
+.normie-3d-bake-colors-section {
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.85rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.normie-3d-bake-colors-section__title {
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin: 0 0 0.35rem;
+  color: var(--text);
+}
+
+.normie-3d-bake-colors-section__hint {
+  margin: 0 0 0.55rem;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 72ch;
+}
+
+.normie-3d-bake-colors-section__code {
+  font-size: 0.78em;
+  padding: 0.08em 0.35em;
+  border-radius: 4px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.normie-3d-viewer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1.1rem;
+}
+
+.normie-3d-viewer-actions__bake {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
+/** Corner control over the WebGL preview (page layout only). */
+.normie-3d-expand-float {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 5;
+  margin: 0;
+  padding: 0.42rem 0.48rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(10, 11, 14, 0.78);
+  color: rgba(255, 255, 255, 0.92);
+  cursor: pointer;
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.45);
+}
+
+.normie-3d-expand-float:hover {
+  background: rgba(22, 24, 32, 0.92);
+  border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+  color: #fff;
+}
+
+.normie-3d-expand-float:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.normie-3d-expand-float .normie-3d-expand-icon {
+  display: block;
+  flex-shrink: 0;
+}
+
+.normie-3d-scene-toolbar {
+  margin-bottom: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.normie-3d-scene-toolbar--above-canvas {
+  margin-bottom: 0.75rem;
+}
+
+.normie-3d-scene-toolbar--below-canvas {
+  margin-top: 0.75rem;
+  margin-bottom: 0;
+}
+
+.normie-3d-scene-inner--below-canvas {
+  padding: 0.65rem 0.85rem 0.85rem;
+}
+
+.normie-3d-scene-below__lighting {
+  margin-top: 0.65rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid var(--border);
+}
+
+.normie-3d-scene-details--below-canvas {
+  margin-top: 0.75rem;
+}
+
+.normie-3d-scene-details {
+  margin-bottom: 0.75rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.normie-3d-scene-details__summary {
+  cursor: pointer;
+  padding: 0.6rem 0.85rem;
+  font-weight: 600;
+  font-size: 0.88rem;
+  list-style-position: outside;
+}
+
+.normie-3d-scene-details[open] .normie-3d-scene-details__summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.normie-3d-scene-inner {
+  padding: 0.65rem 0.85rem 0.85rem;
+}
+
+.normie-3d-scene-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.65rem 1rem;
+  margin-bottom: 0.55rem;
+}
+
+.normie-3d-scene-row:last-child {
+  margin-bottom: 0;
+}
+
+.normie-3d-scene-row--checks .field--check {
+  margin: 0;
+}
+
+/* Full-width-ish shadow slider in the checks row (wraps below toggles on narrow widths). */
+.normie-3d-scene-row--checks .normie-3d-slider--shadow-intensity {
+  flex: 1 1 16rem;
+  min-width: min(100%, 18rem);
+  max-width: 22rem;
+  grid-template-columns: 7.75rem 1fr 2.75rem;
+}
+
+.normie-3d-scene-row--camera-actions {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.normie-3d-camera-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  max-width: 52ch;
+  line-height: 1.35;
+}
+
+.normie-3d-scene-row--sliders {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.45rem;
+}
+
+.normie-3d-scene-row--presets {
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.normie-3d-presets-label {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.normie-3d-scene-row--gradient {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.55rem;
+  padding-top: 0.35rem;
+  margin-top: 0.35rem;
+  border-top: 1px solid var(--border);
+}
+
+.normie-3d-solid-mesh-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  padding-bottom: 0.45rem;
+  margin-bottom: 0.15rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.normie-3d-solid-mesh-colors__reset {
+  margin-left: auto;
+}
+
+@media (max-width: 520px) {
+  .normie-3d-solid-mesh-colors__reset {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
+.normie-3d-gradient-colors {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.normie-3d-gradient-swatch {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.normie-3d-gradient-swatch input[type="color"] {
+  width: 2.5rem;
+  height: 1.75rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  cursor: pointer;
+}
+
+.normie-3d-gradient-axis {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.normie-3d-gradient-axis .input--narrow {
+  min-width: 8rem;
+}
+
+.normie-3d-slider {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr 2.5rem;
+  align-items: center;
+  gap: 0.4rem 0.5rem;
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.normie-3d-slider > span:first-child {
+  text-align: right;
+}
+
+.normie-3d-slider input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  accent-color: var(--accent);
+}
+
+.normie-3d-slider__v {
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  font-size: 0.78rem;
+}
+
+.normie-3d-slider--disabled {
+  opacity: 0.45;
+}
+
+.lab-3d-embed {
+  margin: 1.5rem 0 2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.lab-3d-embed__summary {
+  cursor: pointer;
+  padding: 0.85rem 1rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.lab-3d-embed[open] .lab-3d-embed__summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.lab-3d-embed__blurb {
+  margin: 0;
+  padding: 0.75rem 1rem 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 58ch;
+}
+
+.lab-3d-embed .normie-3d-viewer-actions {
+  padding: 0 1rem;
+}
+
+.lab-3d-embed .normie-3d-scene-details {
+  margin-left: 1rem;
+  margin-right: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.lab-3d-embed .normie-3d-scene-details--below-canvas {
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.lab-3d-embed .normie-3d-view {
+  margin: 0 1rem 0.75rem;
+}
+
+.normie-3d-canvas {
+  display: block;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.normie-3d-hint {
+  margin: 0 0 2rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 62ch;
+}
+
+.normie-3d-source {
+  margin: -0.25rem 0 1rem;
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 70ch;
+  padding: 0.65rem 0.85rem;
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface));
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+/** Same-tab full-window 3D preview (`Expand viewer` on /3d). */
+.normie-3d-viewer-root--expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  box-sizing: border-box;
+  padding: 0.65rem 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  overflow: auto;
+  background: var(--bg);
+}
+
+.normie-3d-viewer-root--expanded .normie-3d-view {
+  flex: 1 1 auto;
+  min-height: min(78dvh, 960px);
+  max-height: none;
+  height: auto;
+  margin-bottom: 0.25rem;
+}
+
+.normie-3d-viewer-root--expanded .normie-3d-scene-toolbar--above-canvas,
+.normie-3d-viewer-root--expanded .normie-3d-scene-toolbar--below-canvas {
+  flex-shrink: 0;
 }

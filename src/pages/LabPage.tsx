@@ -1,4 +1,6 @@
 import {
+  lazy,
+  Suspense,
   useCallback,
   useEffect,
   useId,
@@ -7,6 +9,8 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { NavLink } from "react-router-dom";
+import type { Normie3DLoadParams } from "../components/Normie3DViewer";
 import {
   fetchBurnCommitDetail,
   fetchBurnsForReceiver,
@@ -20,6 +24,12 @@ import {
 } from "../lib/normies-api";
 import "../App.css";
 import { SiteFooter } from "../components/SiteFooter";
+
+const Normie3DViewer = lazy(() =>
+  import("../components/Normie3DViewer").then((m) => ({
+    default: m.Normie3DViewer,
+  })),
+);
 
 const ID_MIN = 0;
 const ID_MAX = 9999;
@@ -52,6 +62,13 @@ function parseId(raw: string): number | null {
   return n;
 }
 
+/** True only for deliberate `AbortController` / fetch abort — not “connection aborted” etc. */
+function isAbortError(e: unknown): boolean {
+  if (e instanceof DOMException && e.name === "AbortError") return true;
+  if (e instanceof Error && e.name === "AbortError") return true;
+  return false;
+}
+
 export function LabPage() {
   const inputId = useId();
   const [rawId, setRawId] = useState("0");
@@ -72,7 +89,10 @@ export function LabPage() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [burnsErr, setBurnsErr] = useState<string | null>(null);
   const [versionsErr, setVersionsErr] = useState<string | null>(null);
+  const [lab3dOpen, setLab3dOpen] = useState(false);
   const loadAbortRef = useRef<AbortController | null>(null);
+  /** Avoid “no data” hint before the first `load()` runs (first paint has loading false). */
+  const loadEverStartedRef = useRef(false);
 
   /** Burns (AP in) + transform versions (edits toward current canvas). */
   const loadHistory = useCallback(async (tokenId: number, signal: AbortSignal) => {
@@ -81,10 +101,6 @@ export function LabPage() {
     setVersionsErr(null);
     setBurnCommits([]);
     setTransformVersions([]);
-
-    const isAbort = (e: unknown) =>
-      (e instanceof DOMException && e.name === "AbortError") ||
-      (e instanceof Error && e.name === "AbortError");
 
     try {
       const burnList = await fetchBurnsForReceiver(tokenId, {
@@ -98,7 +114,7 @@ export function LabPage() {
       );
       setBurnCommits(details);
     } catch (e) {
-      if (!isAbort(e)) {
+      if (!isAbortError(e)) {
         setBurnsErr(e instanceof Error ? e.message : String(e));
       }
     }
@@ -113,7 +129,7 @@ export function LabPage() {
         // Newest first from API → reverse for chronological (oldest edit first).
         setTransformVersions([...versionsRaw].reverse());
       } catch (e) {
-        if (!isAbort(e)) {
+        if (!isAbortError(e)) {
           setVersionsErr(e instanceof Error ? e.message : String(e));
         }
       }
@@ -127,6 +143,7 @@ export function LabPage() {
       loadAbortRef.current?.abort();
       const ac = new AbortController();
       loadAbortRef.current = ac;
+      loadEverStartedRef.current = true;
       setLoading(true);
       setErr(null);
       try {
@@ -134,12 +151,14 @@ export function LabPage() {
           fetchCanvasDiff(id, ac.signal),
           fetchCanvasInfo(id, ac.signal),
         ]);
+        if (ac.signal.aborted) return;
         setDiff(d);
         setInfo(i);
         setActiveId(id);
         setCacheBust((k) => k + 1);
         void loadHistory(id, ac.signal);
       } catch (e) {
+        if (isAbortError(e) || ac.signal.aborted) return;
         setDiff(null);
         setInfo(null);
         setBurnCommits([]);
@@ -148,7 +167,9 @@ export function LabPage() {
         setVersionsErr(null);
         setErr(e instanceof Error ? e.message : String(e));
       } finally {
-        setLoading(false);
+        if (loadAbortRef.current === ac) {
+          setLoading(false);
+        }
       }
     },
     [loadHistory],
@@ -176,6 +197,18 @@ export function LabPage() {
       activeId === null ? "" : `${imageCurrentPngUrl(activeId)}?v=${cacheBust}`,
     [activeId, cacheBust],
   );
+
+  /** Stable object so the embedded 3D viewer does not reload every parent render. */
+  const labEmbedded3dParams = useMemo((): Normie3DLoadParams | null => {
+    if (activeId === null || !info || !diff) return null;
+    return {
+      tokenId: activeId,
+      useOriginalSvg: false,
+      extrudeDepth: 2,
+      bevel: false,
+      includeBackgroundPlate: false,
+    };
+  }, [activeId, info, diff]);
 
   useEffect(() => {
     void load(0);
@@ -221,6 +254,24 @@ export function LabPage() {
         <div className="banner banner--err" role="alert">
           {err}
         </div>
+      )}
+
+      {loading && (
+        <p className="lab-fetch-status" role="status">
+          Fetching canvas data from the Normies API…
+        </p>
+      )}
+
+      {!loading &&
+        !err &&
+        loadEverStartedRef.current &&
+        activeId !== null &&
+        (!info || !diff) && (
+        <p className="lab-fetch-status lab-fetch-status--warn" role="status">
+          No canvas data is loaded yet. Check the Network tab for failed
+          requests to <code>normies-api</code> or{" "}
+          <code>api.normies.art</code>, then press Load.
+        </p>
       )}
 
       {activeId !== null && !err && info && diff && (
@@ -297,6 +348,40 @@ export function LabPage() {
               Download current PNG
             </a>
           </div>
+
+          <details
+            className="lab-3d-embed"
+            onToggle={(e) =>
+              setLab3dOpen((e.target as HTMLDetailsElement).open)
+            }
+          >
+            <summary className="lab-3d-embed__summary">
+              Optional — Normies GLB Creator preview (same site, WebGL)
+            </summary>
+            <p className="lab-3d-embed__blurb">
+              Collapsed by default so the Lab stays image-first. Expand to load a
+              turntable + GLB export for the <strong>same token ID</strong> you
+              loaded above. Full controls live on the{" "}
+              <NavLink to="/3d">Normies GLB Creator</NavLink> tab. If you see a red message
+              here, it is only from this preview (e.g. SVG/network) — not your
+              PNG diff above.
+            </p>
+            {lab3dOpen && (
+              <Suspense
+                fallback={
+                  <p className="lab-fetch-status" role="status">
+                    Loading Normies GLB Creator…
+                  </p>
+                }
+              >
+                <Normie3DViewer
+                  loadParams={labEmbedded3dParams}
+                  layout="inline"
+                  showExportButton
+                />
+              </Suspense>
+            )}
+          </details>
 
           <section className="burns" aria-label="On-chain history for this Normie">
             <h2 className="burns__title">Provenance toward this Normie</h2>
