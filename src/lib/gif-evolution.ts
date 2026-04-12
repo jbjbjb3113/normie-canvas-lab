@@ -108,7 +108,11 @@ export function buildEvolutionFramePlan(
   prependOriginal: boolean,
 ): EvolutionFramePlan {
   const sorted = [...versions].sort((a, b) => a.version - b.version);
-  const cap = Math.max(1, Math.min(15, maxFrames));
+  const n = Number(maxFrames);
+  const cap = Math.max(
+    1,
+    Math.min(15, Number.isFinite(n) ? Math.floor(n) : 12),
+  );
 
   let versionSlots = prependOriginal ? cap - 1 : cap;
   versionSlots = Math.max(0, versionSlots);

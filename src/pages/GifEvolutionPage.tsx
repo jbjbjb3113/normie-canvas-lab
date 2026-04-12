@@ -6,12 +6,21 @@ import {
   useState,
   type FormEvent,
 } from "react";
-import { fetchNormieTransformVersions } from "../lib/normies-api";
+import {
+  fetchNormieTransformVersions,
+  imageCurrentPngUrl,
+  imageOriginalPngUrl,
+} from "../lib/normies-api";
 import {
   buildEvolutionFramePlan,
   encodeGif,
   fetchAndRasterizeFrames,
+  loadImageUrl,
 } from "../lib/gif-evolution";
+import {
+  synthesizeMotionLoopFrames,
+  type MotionLoopKind,
+} from "../lib/gif-motion-loop";
 import { SiteFooter } from "../components/SiteFooter";
 import "../App.css";
 
@@ -32,6 +41,8 @@ type Phase =
   | "done"
   | "error";
 
+type OutputMode = "evolution" | "motion";
+
 export default function GifEvolutionPage() {
   const inputId = useId();
   const [rawId, setRawId] = useState("0");
@@ -39,6 +50,10 @@ export default function GifEvolutionPage() {
   const [outSize, setOutSize] = useState(400);
   const [prependOriginal, setPrependOriginal] = useState(true);
   const [frameDelayMs, setFrameDelayMs] = useState(500);
+
+  const [outputMode, setOutputMode] = useState<OutputMode>("evolution");
+  const [motionKind, setMotionKind] = useState<MotionLoopKind>("bounce");
+  const [motionUseOriginal, setMotionUseOriginal] = useState(false);
 
   const [phase, setPhase] = useState<Phase>("idle");
   const [err, setErr] = useState<string | null>(null);
@@ -77,10 +92,41 @@ export default function GifEvolutionPage() {
       const ac = new AbortController();
       abortRef.current = ac;
       setErr(null);
-      setPhase("versions");
-      setProgress("Loading version list…");
 
       try {
+        if (outputMode === "motion") {
+          setPhase("images");
+          setProgress("Loading art…");
+          const url = motionUseOriginal
+            ? imageOriginalPngUrl(id)
+            : imageCurrentPngUrl(id);
+          const img = await loadImageUrl(url, ac.signal);
+          setPhase("encode");
+          setProgress("Encoding GIF…");
+          const fcN = Math.floor(Number(maxFrames));
+          const fc = Math.max(
+            2,
+            Math.min(15, Number.isFinite(fcN) ? fcN : 12),
+          );
+          const frames = synthesizeMotionLoopFrames(
+            img,
+            outSize,
+            fc,
+            motionKind,
+          );
+          const bytes = await encodeGif(frames, outSize, frameDelayMs);
+          const blob = new Blob([bytes], { type: "image/gif" });
+          const blobUrl = URL.createObjectURL(blob);
+          downloadUrlRef.current = blobUrl;
+          setDownloadUrl(blobUrl);
+          setPhase("done");
+          setProgress(null);
+          return;
+        }
+
+        setPhase("versions");
+        setProgress("Loading version list…");
+
         const versions = await fetchNormieTransformVersions(id, {
           limit: 200,
           signal: ac.signal,
@@ -95,7 +141,7 @@ export default function GifEvolutionPage() {
 
         if (plan.urls.length === 0) {
           setErr(
-            "No frames to animate: no transform history for this token and “Prepend original” is off. Turn on “Prepend original” or pick a token with indexed edits.",
+            "No evolution frames: no indexed edits for this token and “Prepend original” is off. Try “Mint motion loop” for a fun GIF from a single image, or turn on “Prepend original”.",
           );
           setPhase("error");
           setProgress(null);
@@ -117,9 +163,9 @@ export default function GifEvolutionPage() {
 
         const bytes = await encodeGif(frames, outSize, frameDelayMs);
         const blob = new Blob([bytes], { type: "image/gif" });
-        const url = URL.createObjectURL(blob);
-        downloadUrlRef.current = url;
-        setDownloadUrl(url);
+        const blobUrl = URL.createObjectURL(blob);
+        downloadUrlRef.current = blobUrl;
+        setDownloadUrl(blobUrl);
         setPhase("done");
         setProgress(null);
       } catch (e) {
@@ -133,7 +179,17 @@ export default function GifEvolutionPage() {
         setProgress(null);
       }
     },
-    [rawId, maxFrames, outSize, prependOriginal, frameDelayMs, revokeDownload],
+    [
+      rawId,
+      maxFrames,
+      outSize,
+      prependOriginal,
+      frameDelayMs,
+      revokeDownload,
+      outputMode,
+      motionKind,
+      motionUseOriginal,
+    ],
   );
 
   const busy = phase === "versions" || phase === "images" || phase === "encode";
@@ -143,18 +199,18 @@ export default function GifEvolutionPage() {
       <header className="header">
         <h1 className="title">GIF evolution</h1>
         <p className="subtitle">
-          Build a short animated GIF from a token’s original art and indexed
-          canvas versions (from{" "}
+          <strong>Evolution</strong> stitches indexed canvas versions from{" "}
           <a
             href="https://api.normies.art/"
             target="_blank"
             rel="noreferrer"
           >
             api.normies.art
-          </a>
-          ). Requests are throttled to stay within typical rate limits. If the
-          indexer has no history for a token, use “Prepend original” or try
-          another ID.
+          </a>{" "}
+          (great for customized Normies). <strong>Mint motion loop</strong>{" "}
+          builds a short loop from <em>one</em> PNG—no edit history needed—so
+          “stock” Normies still get a shareable GIF. Image loads are throttled on
+          evolution mode.
         </p>
       </header>
 
@@ -174,11 +230,68 @@ export default function GifEvolutionPage() {
         />
 
         <label className="field">
-          Frames (max)
+          Mode
+          <select
+            className="input input--select"
+            value={outputMode}
+            onChange={(e) =>
+              setOutputMode(e.target.value as OutputMode)
+            }
+            disabled={busy}
+          >
+            <option value="evolution">Evolution (history)</option>
+            <option value="motion">Mint motion loop</option>
+          </select>
+        </label>
+
+        {outputMode === "motion" ? (
+          <>
+            <label className="field">
+              Motion
+              <select
+                className="input input--select"
+                value={motionKind}
+                onChange={(e) =>
+                  setMotionKind(e.target.value as MotionLoopKind)
+                }
+                disabled={busy}
+              >
+                <option value="bounce">Bounce (bob + pulse)</option>
+                <option value="bob">Bob</option>
+                <option value="pulse">Pulse</option>
+                <option value="wiggle">Wiggle</option>
+              </select>
+            </label>
+            <label className="field field--check">
+              <input
+                type="checkbox"
+                checked={motionUseOriginal}
+                onChange={(e) => setMotionUseOriginal(e.target.checked)}
+                disabled={busy}
+              />{" "}
+              Use original art
+            </label>
+          </>
+        ) : (
+          <>
+            <label className="field field--check">
+              <input
+                type="checkbox"
+                checked={prependOriginal}
+                onChange={(e) => setPrependOriginal(e.target.checked)}
+                disabled={busy}
+              />{" "}
+              Prepend original
+            </label>
+          </>
+        )}
+
+        <label className="field">
+          Frames
           <input
             className="input input--narrow"
             type="number"
-            min={1}
+            min={outputMode === "motion" ? 2 : 1}
             max={15}
             value={maxFrames}
             onChange={(e) => setMaxFrames(Number(e.target.value))}
@@ -198,16 +311,6 @@ export default function GifEvolutionPage() {
             <option value={400}>400</option>
             <option value={480}>480</option>
           </select>
-        </label>
-
-        <label className="field field--check">
-          <input
-            type="checkbox"
-            checked={prependOriginal}
-            onChange={(e) => setPrependOriginal(e.target.checked)}
-            disabled={busy}
-          />{" "}
-          Prepend original
         </label>
 
         <label className="field">
@@ -242,7 +345,7 @@ export default function GifEvolutionPage() {
           <a
             className="btn btn--ghost"
             href={downloadUrl}
-            download={`normie-${rawId.trim() || "0"}-evolution.gif`}
+            download={`normie-${rawId.trim() || "0"}-${outputMode === "motion" ? "motion" : "evolution"}.gif`}
           >
             Download GIF
           </a>

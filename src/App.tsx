@@ -6,6 +6,7 @@ const LabPage = lazy(() =>
   import("./pages/LabPage.tsx").then((m) => ({ default: m.LabPage })),
 );
 const GifEvolutionPage = lazy(() => import("./pages/GifEvolutionPage.tsx"));
+const EditMapPage = lazy(() => import("./pages/EditMapPage.tsx"));
 
 export default function App() {
   return (
@@ -28,11 +29,20 @@ export default function App() {
         >
           GIF evolution
         </NavLink>
+        <NavLink
+          className={({ isActive }) =>
+            isActive ? "site-nav__link site-nav__link--active" : "site-nav__link"
+          }
+          to="/map"
+        >
+          Edit map
+        </NavLink>
       </nav>
       <Suspense fallback={<div className="route-fallback">Loading…</div>}>
         <Routes>
           <Route path="/" element={<LabPage />} />
           <Route path="/gif" element={<GifEvolutionPage />} />
+          <Route path="/map" element={<EditMapPage />} />
         </Routes>
       </Suspense>
     </BrowserRouter>
