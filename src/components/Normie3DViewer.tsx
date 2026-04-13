@@ -1147,7 +1147,7 @@ export const Normie3DViewer = forwardRef<
             id={bakeColorsSectionTitleId}
             className="normie-3d-bake-colors-section__title"
           >
-            Normies GLB Creator
+            Normie 3D GLB Creator
           </div>
           <p className="normie-3d-bake-colors-section__hint">
             GLB export can bake the live mesh gradient into vertex colors (plain{" "}

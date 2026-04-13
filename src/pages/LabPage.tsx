@@ -10,6 +10,7 @@ import {
   type FormEvent,
 } from "react";
 import { NavLink } from "react-router-dom";
+import { NormiesHeaderArt } from "../components/NormiesHeaderArt";
 import type { Normie3DLoadParams } from "../components/Normie3DViewer";
 import {
   fetchBurnCommitDetail,
@@ -23,7 +24,6 @@ import {
   type NormieTransformVersion,
 } from "../lib/normies-api";
 import "../App.css";
-import { SiteFooter } from "../components/SiteFooter";
 
 const Normie3DViewer = lazy(() =>
   import("../components/Normie3DViewer").then((m) => ({
@@ -217,19 +217,22 @@ export function LabPage() {
   return (
     <div className="layout">
       <header className="header">
-        <h1 className="title">Normie Canvas Lab</h1>
-        <p className="subtitle">
-          Original vs composited (NormiesCanvas) view — pixel diff and canvas
-          stats from{" "}
-          <a
-            href="https://api.normies.art/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            api.normies.art
-          </a>
-          .
-        </p>
+        <div className="header__intro">
+          <h1 className="title">Normie Canvas Lab</h1>
+          <p className="subtitle">
+            Original vs composited (NormiesCanvas) view — pixel diff and canvas
+            stats from{" "}
+            <a
+              href="https://api.normies.art/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              api.normies.art
+            </a>
+            .
+          </p>
+        </div>
+        <NormiesHeaderArt tokenId={activeId} />
       </header>
 
       <form className="toolbar" onSubmit={onSubmit}>
@@ -356,13 +359,13 @@ export function LabPage() {
             }
           >
             <summary className="lab-3d-embed__summary">
-              Optional — Normies GLB Creator preview (same site, WebGL)
+              Optional — Normie 3D GLB Creator preview (same site, WebGL)
             </summary>
             <p className="lab-3d-embed__blurb">
               Collapsed by default so the Lab stays image-first. Expand to load a
               turntable + GLB export for the <strong>same token ID</strong> you
               loaded above. Full controls live on the{" "}
-              <NavLink to="/3d">Normies GLB Creator</NavLink> tab. If you see a red message
+              <NavLink to="/3d">Normie 3D GLB Creator</NavLink> tab. If you see a red message
               here, it is only from this preview (e.g. SVG/network) — not your
               PNG diff above.
             </p>
@@ -370,7 +373,7 @@ export function LabPage() {
               <Suspense
                 fallback={
                   <p className="lab-fetch-status" role="status">
-                    Loading Normies GLB Creator…
+                    Loading Normie 3D GLB Creator…
                   </p>
                 }
               >
@@ -530,7 +533,6 @@ export function LabPage() {
         </>
       )}
 
-      <SiteFooter />
     </div>
   );
 }

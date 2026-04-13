@@ -6,6 +6,26 @@
 
 .header {
   margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem 1.25rem;
+  align-items: flex-start;
+}
+
+.header__intro {
+  flex: 1 1 16rem;
+  min-width: 0;
+}
+
+.normies-header-art {
+  flex: 0 0 auto;
+  width: clamp(100px, 26vw, 168px);
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #e3e5e4;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
 }
 
 .title {
@@ -305,37 +325,6 @@
 .footer p {
   margin: 0;
   max-width: 60ch;
-}
-
-.site-nav {
-  max-width: 960px;
-  margin: 0 auto;
-  padding: 1.25rem 1.25rem 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.site-nav__link {
-  font-size: 0.9rem;
-  color: var(--muted);
-  text-decoration: none;
-  padding: 0.35rem 0.65rem;
-  border-radius: 6px;
-  border: 1px solid transparent;
-}
-
-.site-nav__link:hover {
-  color: var(--text);
-  border-color: var(--border);
-  background: var(--surface);
-}
-
-.site-nav__link--active {
-  color: var(--text);
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
 
 .route-fallback {

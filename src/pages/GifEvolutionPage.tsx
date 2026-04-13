@@ -21,7 +21,7 @@ import {
   synthesizeMotionLoopFrames,
   type MotionLoopKind,
 } from "../lib/gif-motion-loop";
-import { SiteFooter } from "../components/SiteFooter";
+import { NormiesHeaderArt } from "../components/NormiesHeaderArt";
 import "../App.css";
 
 const ID_MIN = 0;
@@ -193,25 +193,29 @@ export default function GifEvolutionPage() {
   );
 
   const busy = phase === "versions" || phase === "images" || phase === "encode";
+  const headerTokenId = parseId(rawId);
 
   return (
     <div className="layout">
       <header className="header">
-        <h1 className="title">GIF evolution</h1>
-        <p className="subtitle">
-          <strong>Evolution</strong> stitches indexed canvas versions from{" "}
-          <a
-            href="https://api.normies.art/"
-            target="_blank"
-            rel="noreferrer"
-          >
-            api.normies.art
-          </a>{" "}
-          (great for customized Normies). <strong>Mint motion loop</strong>{" "}
-          builds a short loop from <em>one</em> PNG—no edit history needed—so
-          “stock” Normies still get a shareable GIF. Image loads are throttled on
-          evolution mode.
-        </p>
+        <div className="header__intro">
+          <h1 className="title">Normie GIF evolution</h1>
+          <p className="subtitle">
+            <strong>Evolution</strong> stitches indexed canvas versions from{" "}
+            <a
+              href="https://api.normies.art/"
+              target="_blank"
+              rel="noreferrer"
+            >
+              api.normies.art
+            </a>{" "}
+            (great for customized Normies). <strong>Mint motion loop</strong>{" "}
+            builds a short loop from <em>one</em> PNG—no edit history needed—so
+            “stock” Normies still get a shareable GIF. Image loads are throttled on
+            evolution mode.
+          </p>
+        </div>
+        <NormiesHeaderArt tokenId={headerTokenId} />
       </header>
 
       <form className="toolbar gif-toolbar" onSubmit={onSubmit}>
@@ -352,7 +356,6 @@ export default function GifEvolutionPage() {
         </p>
       )}
 
-      <SiteFooter />
     </div>
   );
 }

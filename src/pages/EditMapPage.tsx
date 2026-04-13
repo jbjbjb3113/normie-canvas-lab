@@ -5,13 +5,13 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { NormiesHeaderArt } from "../components/NormiesHeaderArt";
 import {
   fetchCanvasDiff,
   imageCurrentPngUrl,
   type CanvasDiff,
 } from "../lib/normies-api";
 import { loadImageUrl } from "../lib/gif-evolution";
-import { SiteFooter } from "../components/SiteFooter";
 import "../App.css";
 
 const ID_MIN = 0;
@@ -127,16 +127,21 @@ export default function EditMapPage() {
     });
   };
 
+  const headerTokenId = activeId ?? parseId(rawId);
+
   return (
     <div className="layout">
       <header className="header">
-        <h1 className="title">Edit map</h1>
-        <p className="subtitle">
-          Overlay <strong>added</strong> (green) and <strong>removed</strong>{" "}
-          (red) pixels from the canvas diff on top of the current composited
-          art—same data as the Lab, drawn as a map you can screenshot or
-          download.
-        </p>
+        <div className="header__intro">
+          <h1 className="title">Edit map</h1>
+          <p className="subtitle">
+            Overlay <strong>added</strong> (green) and <strong>removed</strong>{" "}
+            (red) pixels from the canvas diff on top of the current composited
+            art—same data as the Lab, drawn as a map you can screenshot or
+            download.
+          </p>
+        </div>
+        <NormiesHeaderArt tokenId={headerTokenId} />
       </header>
 
       <form className="toolbar edit-map-toolbar" onSubmit={onSubmit}>
@@ -209,7 +214,6 @@ export default function EditMapPage() {
         </section>
       )}
 
-      <SiteFooter />
     </div>
   );
 }

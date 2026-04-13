@@ -5,13 +5,13 @@ import {
   useState,
   type FormEvent,
 } from "react";
+import { NormiesHeaderArt } from "../components/NormiesHeaderArt";
 import {
   Normie3DViewer,
   type Normie3DExportUiState,
   type Normie3DLoadParams,
   type Normie3DViewerHandle,
 } from "../components/Normie3DViewer";
-import { SiteFooter } from "../components/SiteFooter";
 import "../App.css";
 
 const ID_MIN = 0;
@@ -82,25 +82,30 @@ export default function Normie3DPage() {
     [rawId, useOriginalSvg, extrudeDepth, bevel, includeBackgroundPlate],
   );
 
+  const headerTokenId = parseId(rawId);
+
   return (
     <div className="layout">
       <header className="header">
-        <h1 className="title">Normies GLB Creator</h1>
-        <p className="subtitle">
-          Load a Normie as <strong>SVG</strong> from{" "}
-          <a href="https://api.normies.art/" target="_blank" rel="noreferrer">
-            api.normies.art
-          </a>
-          , extrude paths in the browser, spin on a turntable, and download a{" "}
-          <strong>GLB</strong> for Blender, game engines, or social pipelines.
-          By default only <strong>dark “pixel on”</strong> fills are extruded — the
-          light grey <strong>#e3e5e4</strong> square plate is treated as background
-          and skipped so the GLB is just the face. Optional{" "}
-          <strong>Include back plate</strong> adds a thin canvas block (fixed{" "}
-          <strong>0.1</strong> + <strong>0.9</strong> solid, same scale) on the{" "}
-          <strong>far</strong> side of the art so the face stays in front. Face depth uses
-          the slider (max <strong>16</strong>). Unofficial fan tool — CC0 art.
-        </p>
+        <div className="header__intro">
+          <h1 className="title">Normie 3D GLB Creator</h1>
+          <p className="subtitle">
+            Load a Normie as <strong>SVG</strong> from{" "}
+            <a href="https://api.normies.art/" target="_blank" rel="noreferrer">
+              api.normies.art
+            </a>
+            , extrude paths in the browser, spin on a turntable, and download a{" "}
+            <strong>GLB</strong> for Blender, game engines, or social pipelines.
+            By default only <strong>dark “pixel on”</strong> fills are extruded — the
+            light grey <strong>#e3e5e4</strong> square plate is treated as background
+            and skipped so the GLB is just the face. Optional{" "}
+            <strong>Include back plate</strong> adds a thin canvas block (fixed{" "}
+            <strong>0.1</strong> + <strong>0.9</strong> solid, same scale) on the{" "}
+            <strong>far</strong> side of the art so the face stays in front. Face depth uses
+            the slider (max <strong>16</strong>). Unofficial fan tool — CC0 art.
+          </p>
+        </div>
+        <NormiesHeaderArt tokenId={headerTokenId} />
       </header>
 
       <form className="toolbar normie-3d-toolbar" onSubmit={onSubmit}>
@@ -240,7 +245,6 @@ export default function Normie3DPage() {
         in your browser (no plugin).
       </p>
 
-      <SiteFooter />
     </div>
   );
 }
