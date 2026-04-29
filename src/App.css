@@ -1973,10 +1973,15 @@
 }
 
 .normie-agent__intro {
-  flex-basis: 100%;
+  flex-basis: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
+  margin-bottom: 0.15rem;
+}
+
+.normie-agent__intro .title {
+  margin-bottom: 0.2rem;
 }
 
 .normie-agent__header .normie-agent-avatar {
@@ -2043,6 +2048,14 @@
 }
 
 @media (max-width: 980px) {
+  .normie-agent__intro {
+    margin-bottom: 0;
+  }
+
+  .normie-agent__intro .title {
+    margin-bottom: 0.1rem;
+  }
+
   .normie-agent-avatar__panel {
     width: 100%;
   }
