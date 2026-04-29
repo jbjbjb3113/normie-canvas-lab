@@ -1693,6 +1693,16 @@
     gap: 0.6rem;
     height: 100dvh;
     min-height: 100dvh;
+    padding: 0.55rem;
+    border: 1px solid var(--border);
+    background: color-mix(in srgb, var(--surface) 94%, transparent);
+    border-radius: 10px;
+  }
+
+  .normie-agent__workspace > .panel {
+    border: 0;
+    background: transparent;
+    padding: 0.35rem;
   }
 
   .normie-agent__chat--focus {

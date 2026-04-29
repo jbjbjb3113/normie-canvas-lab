@@ -584,6 +584,15 @@ export function NormieAgentPage() {
     elevenVoiceId,
   ]);
 
+  useEffect(() => {
+    // If a proxy is configured, default to server-key mode unless user explicitly
+    // supplied their own key for this session.
+    if (!elevenProxyUrl) return;
+    if (!elevenApiKey.trim()) {
+      setElevenUseServerKey(true);
+    }
+  }, [elevenApiKey, elevenProxyUrl]);
+
   const dynamicVoice = useMemo(
     () => buildVoiceDynamics(normieAge, normieGender),
     [normieAge, normieGender],
@@ -1030,6 +1039,9 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
           : basePrompt;
       setSystemPrompt(sercPrompt);
       setLoadedId(id);
+      if (id === SERC_TOKEN_ID && elevenProxyUrl) {
+        setElevenUseServerKey(true);
+      }
       if (id === SERC_TOKEN_ID) {
         sercSessionIdRef.current = makeSessionId("serc");
       }
@@ -1054,7 +1066,13 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
     } finally {
       setLoadingTraits(false);
     }
-  }, [autoNormieBackground, autoVoiceByGender, remixBackground, walletInput]);
+  }, [
+    autoNormieBackground,
+    autoVoiceByGender,
+    remixBackground,
+    walletInput,
+    elevenProxyUrl,
+  ]);
 
   const loadNormie = useCallback(() => {
     void loadNormieForId(Number.parseInt(tokenInput.trim(), 10));
