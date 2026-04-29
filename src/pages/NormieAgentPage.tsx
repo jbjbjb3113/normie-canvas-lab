@@ -1193,7 +1193,7 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
   ]);
 
   return (
-    <div className="layout">
+    <div className="layout normie-agent-layout">
       <section
         className="normie-agent__workspace"
         aria-label="Normie workspace"

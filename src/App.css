@@ -1385,6 +1385,10 @@
   min-height: 0;
 }
 
+.normie-agent-layout {
+  padding-bottom: 1rem;
+}
+
 .normie-agent__chat--focus {
   max-width: none;
   margin: 0;
@@ -1687,6 +1691,14 @@
 }
 
 @media (max-width: 980px) {
+  .normie-agent-layout {
+    padding: 0.6rem 0.45rem 0.4rem;
+  }
+
+  .normie-agent-layout .site-nav {
+    display: none;
+  }
+
   .normie-agent__workspace {
     display: flex;
     flex-direction: column;
@@ -1697,6 +1709,7 @@
     border: 1px solid var(--border);
     background: color-mix(in srgb, var(--surface) 94%, transparent);
     border-radius: 10px;
+    margin-bottom: 0;
   }
 
   .normie-agent__workspace > .panel {
