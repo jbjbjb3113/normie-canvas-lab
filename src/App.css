@@ -1712,6 +1712,9 @@
     max-height: 31dvh;
     height: 31dvh;
     padding-bottom: 0.25rem;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
   }
 
   .normie-agent__agent-pane {
@@ -1734,12 +1737,21 @@
   }
 
   .normie-agent__messages {
+    flex: 1 1 auto;
     min-height: 0;
-    max-height: 16dvh;
+    max-height: none;
     margin-bottom: 0.5rem;
   }
 
+  .normie-agent__hint--tight {
+    margin-bottom: 0.35rem;
+    font-size: 0.74rem;
+    line-height: 1.25;
+  }
+
   .normie-agent__compose {
+    margin-top: auto;
+    flex: 0 0 auto;
     flex-wrap: nowrap;
     align-items: flex-end;
   }
