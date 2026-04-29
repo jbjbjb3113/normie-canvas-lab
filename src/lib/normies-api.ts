@@ -34,6 +34,36 @@ async function parseJson<T>(res: Response): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Current token ids for a wallet (Ponder ownership index, not full tx history). */
+export type HoldersResponse = {
+  address: string;
+  tokenIds: string[];
+};
+
+export function normalizeWalletAddress(input: string): string | null {
+  const s = input.trim();
+  if (!/^0x[a-fA-F0-9]{40}$/.test(s)) return null;
+  return s.toLowerCase();
+}
+
+export async function fetchHolderTokenIds(
+  walletAddress: string,
+  signal?: AbortSignal,
+): Promise<HoldersResponse> {
+  const normalized = normalizeWalletAddress(walletAddress);
+  if (!normalized) {
+    throw new Error(
+      "Enter a valid 0x-prefixed address (20 bytes / 40 hex chars).",
+    );
+  }
+  const base = getApiBase();
+  const res = await fetch(`${base}/holders/${normalized}`, {
+    signal,
+    headers: { Accept: "application/json" },
+  });
+  return parseJson<HoldersResponse>(res);
+}
+
 export async function fetchCanvasDiff(
   id: number,
   signal?: AbortSignal,
@@ -74,6 +104,31 @@ export function imageCompositedSvgUrl(id: number): string {
 /** Pre-transform SVG. */
 export function imageOriginalSvgUrl(id: number): string {
   return `${getApiBase()}/normie/${id}/original/image.svg`;
+}
+
+/** 1600-char `0`/`1` bitmap (row-major 40×40), composited or original. */
+/** Decoded Normie traits from `GET /normie/:id/traits` (same shape as typical NFT metadata). */
+export type NormieTraitAttribute = {
+  trait_type: string;
+  value: string | number;
+  display_type?: string;
+};
+
+export type NormieTraitsResponse = {
+  raw: string;
+  attributes: NormieTraitAttribute[];
+};
+
+export async function fetchNormieTraits(
+  id: number,
+  signal?: AbortSignal,
+): Promise<NormieTraitsResponse> {
+  const base = getApiBase();
+  const res = await fetch(`${base}/normie/${id}/traits`, {
+    signal,
+    headers: { Accept: "application/json" },
+  });
+  return parseJson<NormieTraitsResponse>(res);
 }
 
 /** 1600-char `0`/`1` bitmap (row-major 40×40), composited or original. */

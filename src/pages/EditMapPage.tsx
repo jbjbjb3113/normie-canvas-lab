@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { NormiesHeaderArt } from "../components/NormiesHeaderArt";
+import { SiteNav } from "../components/SiteNav";
 import {
   fetchCanvasDiff,
   imageCurrentPngUrl,
@@ -143,6 +144,8 @@ export default function EditMapPage() {
         </div>
         <NormiesHeaderArt tokenId={headerTokenId} />
       </header>
+
+      <SiteNav />
 
       <form className="toolbar edit-map-toolbar" onSubmit={onSubmit}>
         <label className="field" htmlFor={inputId}>

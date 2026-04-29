@@ -6,6 +6,7 @@ import {
   type FormEvent,
 } from "react";
 import { NormiesHeaderArt } from "../components/NormiesHeaderArt";
+import { SiteNav } from "../components/SiteNav";
 import {
   Normie3DViewer,
   type Normie3DExportUiState,
@@ -107,6 +108,8 @@ export default function Normie3DPage() {
         </div>
         <NormiesHeaderArt tokenId={headerTokenId} />
       </header>
+
+      <SiteNav />
 
       <form className="toolbar normie-3d-toolbar" onSubmit={onSubmit}>
         <label className="field" htmlFor={inputId}>

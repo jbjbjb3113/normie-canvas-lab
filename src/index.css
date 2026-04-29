@@ -4,16 +4,28 @@
   box-sizing: border-box;
 }
 
+/* Same display font as canvas.normies.art (served from their origin). */
+@font-face {
+  font-family: "NormiesFont";
+  src: url("https://canvas.normies.art/NormiesFont.otf") format("opentype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
-  --bg: #0c0d10;
-  --surface: #14161c;
-  --border: #2a2e38;
-  --text: #e8eaef;
-  --muted: #8b929e;
-  --accent: #6ee7b7;
+  /* Community Canvas — https://canvas.normies.art/ */
+  --bg: #1a1b1c;
+  --surface: #222324;
+  --border: rgba(227, 229, 228, 0.2);
+  --text: #e3e5e4;
+  --muted: #939695;
+  --accent: #4ade80;
   --danger: #f87171;
-  font-family: "JetBrains Mono", "SF Mono", ui-monospace, monospace;
+  --fg-rgb: 227, 229, 228;
+  --bg-rgb: 26, 27, 28;
+  font-family: "Courier New", Courier, monospace;
   line-height: 1.5;
   font-weight: 400;
   color: var(--text);
@@ -23,6 +35,8 @@
 body {
   margin: 0;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
