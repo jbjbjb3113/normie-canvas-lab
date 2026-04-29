@@ -1954,6 +1954,16 @@
   opacity: 1;
 }
 
+/* Main stage: scribble on background, under portrait + mouth (default scribble z-index 4 would cover the face). */
+.normie-agent-avatar:not(.normie-agent-avatar--pop) .normie-agent-avatar__scribble {
+  z-index: 2;
+}
+
+.normie-agent-avatar:not(.normie-agent-avatar--pop) .normies-header-art,
+.normie-agent-avatar:not(.normie-agent-avatar--pop) .normie-agent-avatar__viewer {
+  z-index: 3;
+}
+
 /* In popout, keep speech layers above scribble to avoid visual corruption. */
 .normie-agent-avatar--pop .normie-agent-avatar__scribble {
   z-index: 2;

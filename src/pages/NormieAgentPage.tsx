@@ -7,6 +7,7 @@ import {
   type ReactNode,
   type CSSProperties,
 } from "react";
+import { Link } from "react-router-dom";
 import { NormiesHeaderArt } from "../components/NormiesHeaderArt";
 import { SiteNav } from "../components/SiteNav";
 import {
@@ -207,7 +208,7 @@ type GeneratedBackground = {
   image: string;
 };
 
-type OverlayKind = "idle" | "emote" | "math" | "energy";
+type OverlayKind = "idle" | "emote" | "math" | "energy" | "soft";
 
 function hashText(input: string): number {
   let h = 2166136261;
@@ -235,22 +236,43 @@ function generatedBackgroundFromSeed(seedText: string, tokenId: number | null): 
   };
 }
 
-function detectOverlayKind(text: string): OverlayKind {
+/**
+ * Classify a reply for pixel scribble + optional background vibe (keyword-only, no ML).
+ * Order: math → soft (gently negative) → energy → emote → idle
+ */
+function replyOverlayKind(text: string): OverlayKind {
   const t = text.toLowerCase();
   if (
-    /(lol|haha|love|heart|cute|happy|yay|:)|\b(thx|thanks)\b/.test(t)
-  ) {
-    return "emote";
-  }
-  if (
-    /(\d+\s*[\+\-\*\/=]\s*\d+)|\b(math|equation|solve|integral|sum|matrix)\b/.test(
+    /(\d+\s*[\+\-\*\/=×÷]\s*\d+)|\b(math|equation|solve|integral|sum|matrix|calculate|theorem|sqrt)\b/.test(
       t,
     )
   ) {
     return "math";
   }
-  if (/(hype|fire|insane|crazy|go!|lets go|let's go|energy|boost)/.test(t)) {
+  const hasPositive =
+    /(\blol\b|haha|hehe|rofl|lmao|lmfao|love|heart|❤|cute|happy|yay|yippie|wonderful|grateful|great|awesome|amazing|thanks|thx|ty|:\)|:d|\^\^)/.test(
+      t,
+    );
+  const hasSoft =
+    /\b(sad|sorrow|sorry|worry|worried|anxious|nervous|hate|terrible|awful|depress|anxiety|fear|scared|afraid|ugh|disappoint|upset|cry|cried|tears|fml|stressed)\b|(\bRIP\b)/i.test(
+      t,
+    );
+  if (hasSoft && !hasPositive) {
+    return "soft";
+  }
+  if (
+    /(\bhype\b|\bfire\b|insane|crazy|\blfg\b|moon(ing)?|pump|rocket|banger|bangers|gigabrain|huge|yuge|sweep|sweeping|energy|boost|jacked|amped)/.test(
+      t,
+    ) ||
+    (t.match(/!/g)?.length ?? 0) >= 2
+  ) {
     return "energy";
+  }
+  if (
+    hasPositive ||
+    /(cute|heart|adorable|beautiful|wholesome|blessed|yay|party|hug)/.test(t)
+  ) {
+    return "emote";
   }
   return "idle";
 }
@@ -551,7 +573,9 @@ export function NormieAgentPage() {
   const speechRecRef = useRef<BrowserSpeechRec | null>(null);
   const speechGuardTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const overlayCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const overlayCanvasMainRef = useRef<HTMLCanvasElement | null>(null);
+  const overlayCanvasPopRef = useRef<HTMLCanvasElement | null>(null);
+  const mouthSmoothedRef = useRef(0);
   const audioCtxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
@@ -668,9 +692,12 @@ export function NormieAgentPage() {
   }, [messages, sending]);
 
   useEffect(() => {
-    const canvas = overlayCanvasRef.current;
-    if (!canvas || show3D) return;
-    drawPixelScribble(canvas, overlayKind, overlaySeedText);
+    if (show3D) return;
+    const draw = (el: HTMLCanvasElement | null) => {
+      if (el) drawPixelScribble(el, overlayKind, overlaySeedText);
+    };
+    draw(overlayCanvasMainRef.current);
+    draw(overlayCanvasPopRef.current);
   }, [overlayKind, overlaySeedText, show3D]);
 
   useEffect(() => {
@@ -826,6 +853,7 @@ export function NormieAgentPage() {
         setChatError(null);
         setSpeakingIndex(index);
         setMouthLevel(0);
+        mouthSmoothedRef.current = 0;
         if (rafRef.current !== null) {
           cancelAnimationFrame(rafRef.current);
           rafRef.current = null;
@@ -855,15 +883,14 @@ export function NormieAgentPage() {
           sourceRef.current = null;
         }
         const analyser = audioCtx.createAnalyser();
-        analyser.fftSize = 256;
-        analyser.smoothingTimeConstant = 0.78;
+        analyser.fftSize = 512;
+        analyser.smoothingTimeConstant = 0.82;
         const source = audioCtx.createMediaElementSource(audio);
         source.connect(analyser);
         analyser.connect(audioCtx.destination);
         analyserRef.current = analyser;
         sourceRef.current = source;
         const bytes = new Uint8Array(analyser.fftSize);
-        let smoothed = 0;
         const tick = () => {
           analyser.getByteTimeDomainData(bytes);
           let sum = 0;
@@ -875,13 +902,18 @@ export function NormieAgentPage() {
           // Noise gate + curved ramp:
           // - quiet speech/excitement => barely any mouth motion
           // - stronger speech => visibly wider opens
-          const gate = 0.017;
-          const span = 0.11;
+          const gate = 0.016;
+          const span = 0.1;
           const normalized = Math.max(0, Math.min(1, (rms - gate) / span));
-          const curved = Math.pow(normalized, 1.65);
-          const level = Math.min(1, curved * 1.2);
-          smoothed = smoothed * 0.8 + level * 0.2;
-          setMouthLevel(smoothed);
+          const curved = Math.pow(normalized, 1.5);
+          const target = Math.min(1, curved * 1.12);
+          // Asymmetric smoothing: quick attack, slow release = smoother lip sync, less flicker
+          let s = mouthSmoothedRef.current;
+          const up = 0.42;
+          const down = 0.16;
+          s += (target - s) * (target > s ? up : down);
+          mouthSmoothedRef.current = s;
+          setMouthLevel(s);
           if (audioRef.current === audio && !audio.paused && !audio.ended) {
             rafRef.current = requestAnimationFrame(tick);
           }
@@ -893,6 +925,7 @@ export function NormieAgentPage() {
             cancelAnimationFrame(rafRef.current);
             rafRef.current = null;
           }
+          mouthSmoothedRef.current = 0;
           setMouthLevel(0);
           source.disconnect();
           if (audioRef.current === audio) audioRef.current = null;
@@ -904,6 +937,7 @@ export function NormieAgentPage() {
             cancelAnimationFrame(rafRef.current);
             rafRef.current = null;
           }
+          mouthSmoothedRef.current = 0;
           setMouthLevel(0);
           source.disconnect();
           if (audioRef.current === audio) audioRef.current = null;
@@ -919,6 +953,8 @@ export function NormieAgentPage() {
         return true;
       } catch (e) {
         setSpeakingIndex(null);
+        mouthSmoothedRef.current = 0;
+        setMouthLevel(0);
         setChatError(e instanceof Error ? e.message : String(e));
         return false;
       }
@@ -1164,7 +1200,7 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
       setMessages((m) => [...m, { role: "assistant", content: reply }]);
       if (autoNormieBackground) remixBackground(reply);
       if (overlayAuto) {
-        setOverlayKind(detectOverlayKind(reply));
+        setOverlayKind(replyOverlayKind(reply));
         setOverlaySeedText(reply);
       }
       void speakReply(reply, messages.length + 1);
@@ -1387,6 +1423,13 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
                 />
               ) : (
                 <>
+                  <canvas
+                    ref={overlayCanvasMainRef}
+                    className="normie-agent-avatar__scribble"
+                    width={80}
+                    height={80}
+                    aria-hidden="true"
+                  />
                   <NormiesHeaderArt tokenId={loadedId} />
                   <div
                     className={
@@ -1542,7 +1585,7 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
                 {!show3D ? (
                   <>
                     <canvas
-                      ref={overlayCanvasRef}
+                      ref={overlayCanvasPopRef}
                       className="normie-agent-avatar__scribble"
                       width={80}
                       height={80}
@@ -1983,7 +2026,10 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
           Trigger scribble
         </button>
         <p className="normie-agent__hint normie-agent__hint--tight">
-          Scribbles currently render in 2D mode (trigger switches to 2D automatically).
+          Scribbles currently render in 2D mode (trigger switches to 2D automatically).{" "}
+          <Link to="/gif" className="site-nav__link" style={{ fontWeight: 500 }}>
+            Short MP4 / GIF loops for X
+          </Link>
         </p>
 
         {usesProxy && ollamaDev ? (
