@@ -1706,17 +1706,20 @@
   }
 
   .normie-agent__chat--focus {
-    order: 2;
-    flex: 1 1 auto;
-    min-height: 26dvh;
-    height: auto;
+    order: 3;
+    flex: 0 0 auto;
+    min-height: 0;
+    max-height: 31dvh;
+    height: 31dvh;
+    padding-bottom: 0.25rem;
   }
 
   .normie-agent__agent-pane {
     order: 1;
-    flex: 0 0 64dvh;
-    min-height: 58dvh;
+    flex: 0 0 65dvh;
+    min-height: 60dvh;
     max-height: 70dvh;
+    overflow: hidden;
   }
 
   .normie-agent-avatar .normies-header-art {
@@ -1728,6 +1731,17 @@
     height: min(64dvh, 92vw);
     min-height: min(64dvh, 92vw);
     max-height: min(64dvh, 92vw);
+  }
+
+  .normie-agent__messages {
+    min-height: 0;
+    max-height: 16dvh;
+    margin-bottom: 0.5rem;
+  }
+
+  .normie-agent__textarea {
+    min-height: 2.8rem;
+    max-height: 5.2rem;
   }
 }
 
