@@ -1409,6 +1409,7 @@
 .normie-agent__chat-actions {
   display: inline-flex;
   gap: 0.45rem;
+  align-items: center;
 }
 
 .normie-agent__agent-pane {
@@ -1447,6 +1448,18 @@
 .normie-agent__btn--small {
   padding: 0.35rem 0.65rem;
   font-size: 0.78rem;
+}
+
+.normie-agent__icon-btn {
+  width: 2.05rem;
+  min-width: 2.05rem;
+  height: 2.05rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  line-height: 1;
 }
 
 .normie-agent-pop {

@@ -1252,17 +1252,30 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
             <div className="normie-agent__chat-actions">
               <button
                 type="button"
-                className="normie-agent__btn normie-agent__btn--small"
+                className="normie-agent__btn normie-agent__btn--small normie-agent__icon-btn"
                 onClick={() => setSettingsOpen(true)}
+                aria-label="Open settings"
+                title="Settings"
               >
-                Paste keys / Settings
+                ⚙
               </button>
               <button
                 type="button"
-                className="normie-agent__btn normie-agent__btn--small"
-                onClick={() => setNormiePoppedOut(true)}
+                className="normie-agent__btn normie-agent__btn--small normie-agent__icon-btn"
+                onClick={() => setSettingsOpen(true)}
+                aria-label="Open keys"
+                title="Keys (OpenAI / ElevenLabs)"
               >
-                Pop out Normie
+                🔑
+              </button>
+              <button
+                type="button"
+                className="normie-agent__btn normie-agent__btn--small normie-agent__icon-btn"
+                onClick={() => setNormiePoppedOut(true)}
+                aria-label="Pop out Normie"
+                title="Pop out Normie"
+              >
+                ↗
               </button>
             </div>
           </div>
