@@ -1748,7 +1748,8 @@
     flex: 0 0 65dvh;
     min-height: 60dvh;
     max-height: 70dvh;
-    overflow: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
   /* Main stage: use almost full pane width (reduces side gutters) while capping by dvh/vw. */
@@ -1764,15 +1765,15 @@
   }
 
   .normie-agent__agent-pane .normie-agent-avatar .normies-header-art {
-    width: min(68dvh, 98vw, 100%);
+    width: min(64dvh, 96vw, 100%);
     height: auto;
   }
 
   .normie-agent__agent-pane .normie-agent-avatar__viewer .normie-3d-view--inline {
-    width: min(68dvh, 98vw, 100%);
-    height: min(68dvh, 98vw, 100%);
-    min-height: min(68dvh, 98vw, 100%);
-    max-height: min(68dvh, 98vw, 100%);
+    width: min(64dvh, 96vw, 100%);
+    height: min(64dvh, 96vw, 100%);
+    min-height: min(64dvh, 96vw, 100%);
+    max-height: min(64dvh, 96vw, 100%);
   }
 
   /* Popout / other contexts: keep prior square cap */

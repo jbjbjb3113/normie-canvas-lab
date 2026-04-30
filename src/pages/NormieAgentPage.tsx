@@ -408,7 +408,7 @@ export function NormieAgentPage() {
   const ollamaDev = endpoint ? chatEndpointIsOllamaDevProxy(endpoint) : false;
   const elevenProxyUrl = useMemo(() => getElevenLabsProxyUrl(), []);
 
-  const [tokenInput, setTokenInput] = useState("9098");
+  const [tokenInput, setTokenInput] = useState(String(SERC_TOKEN_ID));
   const [loadedId, setLoadedId] = useState<number | null>(null);
   const [hasEyewear, setHasEyewear] = useState(false);
   const [forceEyes, setForceEyes] = useState(false);
@@ -418,7 +418,7 @@ export function NormieAgentPage() {
   const [showMouthPicker, setShowMouthPicker] = useState(false);
   const [autoNormieBackground, setAutoNormieBackground] = useState(true);
   const [generatedBackground, setGeneratedBackground] = useState<GeneratedBackground>(
-    () => generatedBackgroundFromSeed("normie idle", 9098),
+    () => generatedBackgroundFromSeed("normie idle", SERC_TOKEN_ID),
   );
   const [overlayAuto, setOverlayAuto] = useState(true);
   const [overlayKind, setOverlayKind] = useState<OverlayKind>("idle");
@@ -1262,6 +1262,15 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
               <button
                 type="button"
                 className="normie-agent__btn normie-agent__btn--small normie-agent__icon-btn"
+                onClick={() => setShowMouthPicker((v) => !v)}
+                aria-label={showMouthPicker ? "Hide face tuning" : "Show face tuning"}
+                title={showMouthPicker ? "Hide face tuning" : "Face tuning"}
+              >
+                🧑
+              </button>
+              <button
+                type="button"
+                className="normie-agent__btn normie-agent__btn--small normie-agent__icon-btn"
                 onClick={() => setSettingsOpen(true)}
                 aria-label="Open keys"
                 title="Keys (OpenAI / ElevenLabs)"
@@ -1378,6 +1387,15 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
             <h1 className="title">TALK WITH SERC, or your Normie too!!!</h1>
           </div>
           <div className="normie-agent__row normie-agent__row--inline-load">
+            <button
+              type="button"
+              className="normie-agent__btn normie-agent__btn--small"
+              onClick={() => void loadNormieForId(SERC_TOKEN_ID)}
+              disabled={loadingTraits}
+              title="Instantly load SERC (token 4354)"
+            >
+              Talk to SERC
+            </button>
             <label className="normie-agent__label">
               Token id
               <input
@@ -1396,15 +1414,6 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
               disabled={loadingTraits}
             >
               {loadingTraits ? "Loading..." : "Load"}
-            </button>
-            <button
-              type="button"
-              className="normie-agent__btn normie-agent__btn--small"
-              onClick={() => void loadNormieForId(SERC_TOKEN_ID)}
-              disabled={loadingTraits}
-              title="Instantly load SERC (token 4354)"
-            >
-              Talk to SERC
             </button>
           </div>
           {loadError ? (
@@ -1452,7 +1461,7 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
                     height={80}
                     aria-hidden="true"
                   />
-                  <NormiesHeaderArt tokenId={loadedId} />
+                  <NormiesHeaderArt tokenId={loadedId ?? SERC_TOKEN_ID} />
                   <div
                     className={
                       hasEyewear && !forceEyes
@@ -1472,13 +1481,6 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
                 </>
               )}
             </div>
-            <button
-              type="button"
-              className="normie-agent-avatar__tune-toggle"
-              onClick={() => setShowMouthPicker((v) => !v)}
-            >
-              {showMouthPicker ? "Hide tuning" : "Tune face"}
-            </button>
             {showMouthPicker ? (
               <div className="normie-agent-avatar__panel-row">
                 <div className="normie-agent-avatar__panel-head">
@@ -1641,7 +1643,7 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
                   />
                 ) : (
                   <>
-                    <NormiesHeaderArt tokenId={loadedId} />
+                    <NormiesHeaderArt tokenId={loadedId ?? SERC_TOKEN_ID} />
                     <div
                       className={
                         hasEyewear && !forceEyes
