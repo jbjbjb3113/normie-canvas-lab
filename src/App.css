@@ -1738,6 +1738,31 @@
     overflow: hidden;
   }
 
+  /* Main stage: use almost full pane width (reduces side gutters) while capping by dvh/vw. */
+  .normie-agent__agent-pane .normie-agent-avatar {
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  .normie-agent__agent-pane .normie-agent-avatar__image-wrap {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  .normie-agent__agent-pane .normie-agent-avatar .normies-header-art {
+    width: min(68dvh, 98vw, 100%);
+    height: auto;
+  }
+
+  .normie-agent__agent-pane .normie-agent-avatar__viewer .normie-3d-view--inline {
+    width: min(68dvh, 98vw, 100%);
+    height: min(68dvh, 98vw, 100%);
+    min-height: min(68dvh, 98vw, 100%);
+    max-height: min(68dvh, 98vw, 100%);
+  }
+
+  /* Popout / other contexts: keep prior square cap */
   .normie-agent-avatar .normies-header-art {
     width: min(64dvh, 92vw);
   }
@@ -2070,6 +2095,23 @@
   color: var(--muted);
 }
 
+.normie-agent-avatar__panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.normie-agent-avatar__panel-head-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 @media (max-width: 980px) {
   .normie-agent__intro {
     margin-bottom: 0;
@@ -2087,7 +2129,7 @@
     position: fixed;
     left: 0.6rem;
     right: 0.6rem;
-    bottom: 0.6rem;
+    bottom: max(0.6rem, env(safe-area-inset-bottom, 0px));
     z-index: 1600;
     display: grid;
     grid-template-columns: 1fr;
@@ -2099,6 +2141,18 @@
     box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
     max-height: 48dvh;
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .normie-agent-avatar__panel-head {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    margin: -0.25rem -0.25rem 0.15rem;
+    padding: 0.4rem 0.35rem 0.55rem;
+    background: color-mix(in srgb, var(--bg) 90%, black);
+    border-bottom: 1px solid var(--border);
+    border-radius: 8px 8px 0 0;
   }
 
   .normie-agent-avatar__panel-spacer {

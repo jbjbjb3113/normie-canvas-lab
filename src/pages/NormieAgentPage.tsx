@@ -709,6 +709,15 @@ export function NormieAgentPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [normiePoppedOut]);
 
+  useEffect(() => {
+    if (!showMouthPicker) return;
+    const onKey = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") setShowMouthPicker(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showMouthPicker]);
+
   const recCtor = useMemo(() => getSpeechRecognitionCtor(), []);
   const startListening = useCallback(() => {
     if (!recCtor || listening) return;
@@ -1459,6 +1468,19 @@ ${SERC_MESSAGE_PILLARS.map((line) => `  - "${line}"`).join("\n")}
             </button>
             {showMouthPicker ? (
               <div className="normie-agent-avatar__panel-row">
+                <div className="normie-agent-avatar__panel-head">
+                  <span className="normie-agent-avatar__panel-head-title">
+                    Face tuning
+                  </span>
+                  <button
+                    type="button"
+                    className="normie-agent__btn normie-agent__btn--small"
+                    onClick={() => setShowMouthPicker(false)}
+                    aria-label="Close face tuning"
+                  >
+                    Done
+                  </button>
+                </div>
                 <aside className="normie-agent-avatar__panel normie-agent-avatar__panel--left">
                   <p className="normie-agent-avatar__panel-title">Placement</p>
                   <label className="normie-agent__label">
